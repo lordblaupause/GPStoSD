@@ -28,6 +28,7 @@ SerialLCD slcd(5,6);          // serial port of LCD
 
 int sdPin = 10;               // SD pin
 int interval = 1000;          // in milliseconds
+bool satFound = true;         // Sat. available during last tracking?
 
 void setup() {
   // wait for 0.1 sec
@@ -58,12 +59,12 @@ void loop() {
   // newC indicates if new NMEA was collected
   bool newC = false;
   
-  // collect NMEA string for 1 second
+  // collect NMEA string for interval milliseconds
   for(unsigned long start = millis(); millis() - start < interval;) {
     while(gpsPort.available()) {
       char c = gpsPort.read();
       if (gps.encode(c))
-        newC = true;    // NMEA found, so parse it.
+        newC = true;      // NMEA found, so parse it.
     }
   }
   
@@ -72,6 +73,8 @@ void loop() {
   
   // if GPS recieved new NMEA, parse it
   if(newC){
+    satFound = true;  // save Sat. state for next tracking
+    
     float lat, lon;         // Position parameters
     unsigned long age;      // Coordinate age
     char clat[20];          // char buffer for latitude
@@ -80,8 +83,8 @@ void loop() {
     gps.f_get_position(&lat, &lon, &age);
     
     // convert decimal degree into string
-    dtostrf(double(lat), 3, 10, clat);
-    dtostrf(double(lon), 3, 10, clon);
+    dtostrf(double(lat), 3, 8, clat);
+    dtostrf(double(lon), 3, 8, clon);
     // open logging file
     fs = SD.open("gps.txt", FILE_WRITE);
     
@@ -97,23 +100,30 @@ void loop() {
     fs.print(lat == TinyGPS::GPS_INVALID_F_ANGLE ? "NA" : clat);
     fs.print(",");
     slcd.setCursor(0,0);
-    slcd.println(lat == TinyGPS::GPS_INVALID_F_ANGLE ? "LAT = N.A." : clat);
+    slcd.print("LAT: ");
+    slcd.print(lat == TinyGPS::GPS_INVALID_F_ANGLE ? "N.A." : clat);
     
     // Longitude as decimal degree
-    fs.println(lon == TinyGPS::GPS_INVALID_F_ANGLE ? "NA" : clon);
+    fs.print(lon == TinyGPS::GPS_INVALID_F_ANGLE ? "NA" : clon);
     fs.print(",");
     slcd.setCursor(0,1);
-    slcd.print(lon == TinyGPS::GPS_INVALID_F_ANGLE ? "LON = N.A." : clat);
+    slcd.print("LON: ");
+    slcd.print(lon == TinyGPS::GPS_INVALID_F_ANGLE ? "N.A." : clat);
     
     // Date Time
     sdPrint_dateTime(fs, gps);
+    fs.println();
 
     fs.close();
   } else {
     // No NMEA recieved during last second
     // no Sattelite availale
     fs = SD.open("gps.txt", FILE_WRITE);
-    fs.println("No Data recieved");
+    if (satFound){
+      fs.println("No Data recieved");
+      satFound = false;     // set to false, to prevend second
+                            // 'No Data recieved' message
+    }
     
     // print to LCD
     slcd.setCursor(0,0);
