@@ -108,7 +108,7 @@ void loop() {
     fs.print(",");
     slcd.setCursor(0,1);
     slcd.print("LON: ");
-    slcd.print(lon == TinyGPS::GPS_INVALID_F_ANGLE ? "N.A." : clat);
+    slcd.print(lon == TinyGPS::GPS_INVALID_F_ANGLE ? "N.A." : clon);
     
     // Date Time
     sdPrint_dateTime(fs, gps);
