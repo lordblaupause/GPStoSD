@@ -16,7 +16,15 @@
  * visit: http://openhydro.org/typo3/index.php?id=38
  */
 #include <SoftwareSerial.h>
-#include <SerialLCD.h>
+
+/* 
+ * When using a UART display uncomment SerialLCD
+ * and comment the following lines for I2C Display
+ */
+//#include <SerialLCD.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
 #include <TinyGPS.h>
 #include <SPI.h>
 #include <SD.h>
@@ -24,7 +32,8 @@
 File fs;                      // filestream for logging file
 SoftwareSerial gpsPort(3,4);  // serial port of GPS
 TinyGPS gps;                  // gps object for parsing data
-SerialLCD slcd(5,6);          // serial port of LCD
+//SerialLCD slcd(5,6);                // serial LCD (UART)
+LiquidCrystal_I2C slcd(0x3F, 16,2);   // I2C Display (0x3F)
 
 int sdPin = 10;               // SD pin
 int interval = 1000;          // in milliseconds
@@ -49,7 +58,9 @@ void setup() {
   }
   
   // start LCD panel
-  slcd.begin();
+  //slcd.begin();      // serial Display (UART)
+  slcd.init();         // I2C Display
+  slcd.backlight();    // I2C Display
   
   // start GPS device
   gpsPort.begin(9600);
