@@ -52,7 +52,7 @@ void setup() {
   if(!SD.exists("gps.txt")){
     fs = SD.open("gps.txt", FILE_WRITE);
     fs.println("GPS MAPPER OUTPUT FILE");
-    fs.println("Sat,HDOP,Latitude,Longitude,Date,Time");
+    fs.println("Sat,HDOP,Latitude,Longitude,Date Time");
     fs.println("-------------------------------------");
     fs.close();
   }
@@ -156,9 +156,9 @@ static void sdPrint_dateTime(File &fs, TinyGPS &gps){
   if (age == TinyGPS::GPS_INVALID_AGE)
     fs.print("NA");
   else {
-    char buf[32];
+    char buf[19];
     sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d",
-        year, month, day, hour, minute, second);
+        year, (int)month, (int)day, (int)hour, (int)minute, (int)second);
     
     fs.print(buf);
   }
